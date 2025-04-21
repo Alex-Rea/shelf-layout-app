@@ -19,39 +19,43 @@ function App() {
   ];
 
   return (
-    <div className="flex flex-col md:flex-row h-screen">
+    <div className="flex flex-col h-screen">
 
-      {/* Sidebar: Gallery + Mode Toggle */}
-      <div className="order-last md:order-first w-full md:w-1/4 p-2 bg-gray-100 overflow-y-auto">
-        <div className="mb-4">
-          <button
-            className={`px-4 py-2 mr-2 ${mode === 'editor' ? 'bg-blue-600' : 'bg-blue-300'} text-white rounded`}
-            onClick={() => setMode('editor')}
-          >
-            Shelf Editor
-          </button>
-          <button
-            className={`px-4 py-2 ${mode === 'planogram' ? 'bg-green-600' : 'bg-green-300'} text-white rounded`}
-            onClick={() => setMode('planogram')}
-          >
-            Planogram Mode
-          </button>
-        </div>
+      {/* 🔝 Mode Switch Bar at the Top */}
+      <div className="w-full bg-gray-100 p-2 border-b flex justify-center gap-4">
+        <button
+          className={`px-4 py-2 ${mode === 'editor' ? 'bg-blue-600' : 'bg-blue-300'} text-white rounded`}
+          onClick={() => setMode('editor')}
+        >
+          Shelf Editor
+        </button>
+        <button
+          className={`px-4 py-2 ${mode === 'planogram' ? 'bg-green-600' : 'bg-green-300'} text-white rounded`}
+          onClick={() => setMode('planogram')}
+        >
+          Planogram Mode
+        </button>
       </div>
 
-      {/* Main Layout Area */}
-      <div className="flex-1 p-4 bg-white overflow-y-auto">
-        {mode === 'editor' ? (
-          <ShelfEditor shelves={shelves} setShelves={setShelves} />
-        ) : (
-          <PlanogramView
-            shelves={shelves}
-            setShelves={setShelves}
-            planogram={planogram}
-            setPlanogram={setPlanogram}
-            products={products}
-          />
-        )}
+      {/* 🧱 Main Layout */}
+      <div className="flex flex-1 flex-col md:flex-row overflow-hidden">
+        
+        {/* Removed Sidebar content — now handled inside each mode */}
+
+        {/* Main Working Area */}
+        <div className="flex-1 p-4 bg-white overflow-y-auto">
+          {mode === 'editor' ? (
+            <ShelfEditor shelves={shelves} setShelves={setShelves} />
+          ) : (
+            <PlanogramView
+              shelves={shelves}
+              setShelves={setShelves}
+              planogram={planogram}
+              setPlanogram={setPlanogram}
+              products={products}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

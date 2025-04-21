@@ -35,8 +35,8 @@ function ShelfEditor() {
   return (
     <div className="relative w-full h-[80vh] bg-white border border-dashed overflow-hidden">
 
-      {/* Palette Toolbar */}
-      <div className="fixed top-4 left-4 z-10 flex gap-2 bg-white p-2 border rounded shadow">
+      {/* 🧰 Bottom Toolbar */}
+      <div className="fixed bottom-0 left-0 w-full z-10 bg-white border-t p-2 flex justify-center gap-2 shadow-md">
         <PaletteButton label="Shelf Line" type="shelf-line" onAdd={addElement} />
         <PaletteButton label="Divider" type="divider-line" onAdd={addElement} />
         <PaletteButton label="Slot" type="slot" onAdd={addElement} />
@@ -44,7 +44,7 @@ function ShelfEditor() {
         <button onClick={loadTemplate} className="px-3 py-1 bg-green-500 text-white rounded text-sm">Load Shelf</button>
       </div>
 
-      {/* Canvas Elements */}
+      {/* 🧱 Canvas Elements */}
       {elements.map((el) => (
         <Draggable
           key={el.id}

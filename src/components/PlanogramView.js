@@ -1,5 +1,7 @@
 import React from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
+
 
 function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products }) {
   const onDragEnd = (result) => {
@@ -30,7 +32,7 @@ function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products 
     setPlanogram(templates[name]);
   };
 
-  
+
   const handleAddShelfFromTemplate = () => {
     const templates = JSON.parse(localStorage.getItem('shelfTemplates') || '{}');
     const name = prompt("Enter shelf template name to load:", Object.keys(templates)[0] || '');
@@ -108,38 +110,49 @@ function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products 
         </div>
 
         {/* Main planogram grid */}
-        <div className="flex-1 p-4 bg-white overflow-y-auto">
-          {shelves.map((shelf) => (
-            <div key={shelf.id} className="flex space-x-2 mb-4">
-              {shelf.slots.map((slot) => {
-                const productId = planogram[slot.id];
-                const product = products.find(p => p.id === productId);
+        <div className="flex-1 p-4 bg-white overflow-hidden">
+          <TransformWrapper
+            minScale={0.5}
+            maxScale={3}
+            doubleClick={{ disabled: true }}
+            wheel={{ step: 0.05 }}
+          >
+            <TransformComponent>
+              <div>
+                {shelves.map((shelf) => (
+                  <div key={shelf.id} className="flex space-x-2 mb-4">
+                    {shelf.slots.map((slot) => {
+                      const productId = planogram[slot.id];
+                      const product = products.find(p => p.id === productId);
 
-                return (
-                  <Droppable droppableId={slot.id} key={slot.id}>
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className="w-16 h-24 border border-dashed bg-gray-100 flex items-center justify-center"
-                      >
-                        {product ? (
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            className="w-full h-full object-contain"
-                          />
-                        ) : (
-                          <span className="text-xs text-gray-400">Empty</span>
-                        )}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-                );
-              })}
-            </div>
-          ))}
+                      return (
+                        <Droppable droppableId={slot.id} key={slot.id}>
+                          {(provided) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.droppableProps}
+                              className="w-16 h-24 border border-dashed bg-gray-100 flex items-center justify-center"
+                            >
+                              {product ? (
+                                <img
+                                  src={product.image}
+                                  alt={product.name}
+                                  className="w-full h-full object-contain"
+                                />
+                              ) : (
+                                <span className="text-xs text-gray-400">Empty</span>
+                              )}
+                              {provided.placeholder}
+                            </div>
+                          )}
+                        </Droppable>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </TransformComponent>
+          </TransformWrapper>
         </div>
       </div>
     </DragDropContext>
