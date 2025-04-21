@@ -1,7 +1,7 @@
 import React from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
-function PlanogramView({ shelves, planogram, setPlanogram, products }) {
+function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products }) {
   const onDragEnd = (result) => {
     const { destination, draggableId } = result;
     if (!destination) return;
@@ -30,6 +30,35 @@ function PlanogramView({ shelves, planogram, setPlanogram, products }) {
     setPlanogram(templates[name]);
   };
 
+  
+  const handleAddShelfFromTemplate = () => {
+    const templates = JSON.parse(localStorage.getItem('shelfTemplates') || '{}');
+    const name = prompt("Enter shelf template name to load:", Object.keys(templates)[0] || '');
+    const elements = templates[name];
+  
+    if (!elements) {
+      alert("Template not found.");
+      return;
+    }
+  
+    // Parse shelf lines and dividers from template
+    const slotElements = elements.filter(el => el.type === 'slot');
+    if (slotElements.length === 0) {
+      alert("No slots found in this shelf template.");
+      return;
+    }
+  
+    const newShelf = {
+      id: `shelf_${shelves.length + 1}`,
+      slots: slotElements.map((slot, i) => ({
+        id: `slot_${shelves.length + 1}_${i + 1}`,
+      }))
+    };
+  
+    setShelves(prev => [...prev, newShelf]);
+  };
+  
+
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="flex flex-col md:flex-row h-full w-full">
@@ -41,7 +70,9 @@ function PlanogramView({ shelves, planogram, setPlanogram, products }) {
           <div className="flex flex-col gap-2 mb-4">
             <button onClick={savePlanogram} className="px-3 py-2 bg-blue-500 text-white rounded text-sm">Save Planogram</button>
             <button onClick={loadPlanogram} className="px-3 py-2 bg-green-500 text-white rounded text-sm">Load Planogram</button>
-            <button onClick={() => alert("Add Shelf logic to come")} className="px-3 py-2 bg-gray-600 text-white rounded text-sm">Add Shelf</button>
+            <button onClick={handleAddShelfFromTemplate} className="px-3 py-2 bg-gray-600 text-white rounded text-sm">
+              Add Shelf
+            </button>
           </div>
 
           <h4 className="text-md font-medium mb-2">Product Gallery</h4>

@@ -46,6 +46,7 @@ function App() {
         ) : (
           <PlanogramView
             shelves={shelves}
+            setShelves={setShelves}
             planogram={planogram}
             setPlanogram={setPlanogram}
             products={products}
