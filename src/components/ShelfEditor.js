@@ -1,63 +1,65 @@
 import React, { useState } from 'react';
+import Draggable from 'react-draggable';
 
-function ShelfEditor({ shelves, setShelves }) {
+function ShelfEditor() {
   const [elements, setElements] = useState([]);
 
-  const handleDrop = (e) => {
-    const type = e.dataTransfer.getData("type");
-    const x = e.clientX;
-    const y = e.clientY;
-
+  const addElement = (type) => {
     const newElement = {
       id: `element_${Date.now()}`,
       type,
-      x,
-      y
+      x: 50,
+      y: 50
     };
-
     setElements((prev) => [...prev, newElement]);
   };
 
-  const allowDrop = (e) => {
-    e.preventDefault();
-  };
-
   return (
-    <div className="border border-dashed h-[80vh] w-full bg-white relative overflow-hidden" onDrop={handleDrop} onDragOver={allowDrop}>
-      {/* Palette */}
-      <div className="mb-4 flex gap-4">
-        <DraggableItem type="shelf-line" label="Shelf Line" />
-        <DraggableItem type="divider-line" label="Divider" />
-        <DraggableItem type="slot" label="Slot" />
+    <div className="relative w-full h-[80vh] bg-white border border-dashed overflow-hidden">
+
+      {/* Palette Toolbar */}
+      <div className="fixed top-4 left-4 z-10 flex gap-2 bg-white p-2 border rounded shadow">
+        <PaletteButton label="Shelf Line" type="shelf-line" onAdd={addElement} />
+        <PaletteButton label="Divider" type="divider-line" onAdd={addElement} />
+        <PaletteButton label="Slot" type="slot" onAdd={addElement} />
       </div>
 
-      {/* Canvas elements */}
+      {/* Canvas Elements */}
       {elements.map((el) => (
-        <div
+        <Draggable
           key={el.id}
-          className={`absolute ${el.type === "shelf-line" ? "h-[2px] w-full bg-black" :
-            el.type === "divider-line" ? "w-[2px] h-full bg-black" :
-              "w-16 h-20 border border-dashed bg-gray-200"} `}
-          style={{ left: el.x, top: el.y }}
-        />
+          defaultPosition={{ x: el.x, y: el.y }}
+          onStop={(e, data) => {
+            setElements((prev) =>
+              prev.map((item) =>
+                item.id === el.id ? { ...item, x: data.x, y: data.y } : item
+              )
+            );
+          }}
+        >
+          <div
+            className={`absolute cursor-move ${
+              el.type === 'shelf-line'
+                ? 'h-[2px] w-[90%] bg-black'
+                : el.type === 'divider-line'
+                ? 'w-[2px] h-[90%] bg-black'
+                : 'w-16 h-20 border border-dashed bg-gray-200'
+            }`}
+          />
+        </Draggable>
       ))}
     </div>
   );
 }
 
-function DraggableItem({ type, label }) {
-  const handleDragStart = (e) => {
-    e.dataTransfer.setData("type", type);
-  };
-
+function PaletteButton({ type, label, onAdd }) {
   return (
-    <div
-      draggable
-      onDragStart={handleDragStart}
-      className="px-3 py-1 bg-gray-300 rounded cursor-move"
+    <button
+      onClick={() => onAdd(type)}
+      className="px-3 py-1 bg-gray-300 hover:bg-gray-400 rounded text-sm"
     >
       {label}
-    </div>
+    </button>
   );
 }
 
