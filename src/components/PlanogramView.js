@@ -8,7 +8,7 @@ function PlanogramView({ shelves, planogram, setPlanogram }) {
   ];
 
   const onDragEnd = (result) => {
-    const { source, destination, draggableId } = result;
+      const { destination, draggableId } = result;
     if (!destination) return;
 
     setPlanogram({ ...planogram, [destination.droppableId]: draggableId });
@@ -44,7 +44,11 @@ function PlanogramView({ shelves, planogram, setPlanogram }) {
                   className="w-16 h-24 border bg-gray-200 flex items-center justify-center"
                 >
                   {planogram[slot.id] ? (
-                    <img src={`/images/products/${planogram[slot.id]}.webp`} className="w-full h-full object-contain" />
+                    <img 
+                      src={`/images/products/${planogram[slot.id]}.webp`} 
+                      alt={`Product in ${slot.id}`} 
+                      className="w-full h-full object-contain" 
+                    />
                   ) : (
                     <span className="text-xs text-gray-400">Empty</span>
                   )}
