@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Draggable from 'react-draggable';
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
 function ShelfEditor() {
   const [elements, setElements] = useState([]);
@@ -35,6 +36,42 @@ function ShelfEditor() {
   return (
     <div className="relative w-full h-[80vh] bg-white border border-dashed overflow-hidden">
 
+      {/* 📦 Zoomable Canvas */}
+      <TransformWrapper
+        minScale={0.5}
+        maxScale={3}
+        doubleClick={{ disabled: true }}
+        wheel={{ step: 0.05 }}
+      >
+        <TransformComponent>
+          <div className="relative w-full h-[80vh]">
+            {elements.map((el) => (
+              <Draggable
+                key={el.id}
+                defaultPosition={{ x: el.x, y: el.y }}
+                onStop={(e, data) => {
+                  setElements((prev) =>
+                    prev.map((item) =>
+                      item.id === el.id ? { ...item, x: data.x, y: data.y } : item
+                    )
+                  );
+                }}
+              >
+                <div
+                  className={`absolute cursor-move ${
+                    el.type === 'shelf-line'
+                      ? 'h-[2px] w-[90%] bg-black'
+                      : el.type === 'divider-line'
+                      ? 'w-[2px] h-[90%] bg-black'
+                      : 'w-16 h-20 border border-dashed bg-gray-200'
+                  }`}
+                />
+              </Draggable>
+            ))}
+          </div>
+        </TransformComponent>
+      </TransformWrapper>
+
       {/* 🧰 Bottom Toolbar */}
       <div className="fixed bottom-0 left-0 w-full z-10 bg-white border-t p-2 flex justify-center gap-2 shadow-md">
         <PaletteButton label="Shelf Line" type="shelf-line" onAdd={addElement} />
@@ -43,31 +80,6 @@ function ShelfEditor() {
         <button onClick={saveTemplate} className="px-3 py-1 bg-blue-500 text-white rounded text-sm">Save Shelf</button>
         <button onClick={loadTemplate} className="px-3 py-1 bg-green-500 text-white rounded text-sm">Load Shelf</button>
       </div>
-
-      {/* 🧱 Canvas Elements */}
-      {elements.map((el) => (
-        <Draggable
-          key={el.id}
-          defaultPosition={{ x: el.x, y: el.y }}
-          onStop={(e, data) => {
-            setElements((prev) =>
-              prev.map((item) =>
-                item.id === el.id ? { ...item, x: data.x, y: data.y } : item
-              )
-            );
-          }}
-        >
-          <div
-            className={`absolute cursor-move ${
-              el.type === 'shelf-line'
-                ? 'h-[2px] w-[90%] bg-black'
-                : el.type === 'divider-line'
-                ? 'w-[2px] h-[90%] bg-black'
-                : 'w-16 h-20 border border-dashed bg-gray-200'
-            }`}
-          />
-        </Draggable>
-      ))}
     </div>
   );
 }
