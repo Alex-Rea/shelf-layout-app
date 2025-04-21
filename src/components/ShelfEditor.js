@@ -39,13 +39,6 @@ function ShelfEditor() {
     alert(`Shelf template "${name}" saved!`);
   };
   
-  const loadTemplate = () => {
-    const templates = JSON.parse(localStorage.getItem('shelfTemplates') || '{}');
-    const name = prompt("Enter template name to load:", Object.keys(templates)[0] || '');
-    if (!templates[name]) return alert("Template not found.");
-    setElements(templates[name]);
-  };
-
   const updateSize = (id, width, height) => {
     setElements(prev =>
       prev.map(el => el.id === id ? { ...el, width, height } : el)
