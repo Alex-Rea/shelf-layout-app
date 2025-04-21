@@ -14,6 +14,24 @@ function ShelfEditor() {
     setElements((prev) => [...prev, newElement]);
   };
 
+  const saveTemplate = () => {
+    const name = prompt("Enter template name:");
+    if (!name) return;
+
+    const templates = JSON.parse(localStorage.getItem('shelfTemplates') || '{}');
+    templates[name] = elements;
+    localStorage.setItem('shelfTemplates', JSON.stringify(templates));
+    alert(`Shelf template "${name}" saved!`);
+  };
+
+  const loadTemplate = () => {
+    const templates = JSON.parse(localStorage.getItem('shelfTemplates') || '{}');
+    const name = prompt("Enter template name to load:", Object.keys(templates)[0] || '');
+    if (!templates[name]) return alert("Template not found.");
+
+    setElements(templates[name]);
+  };
+
   return (
     <div className="relative w-full h-[80vh] bg-white border border-dashed overflow-hidden">
 
@@ -22,6 +40,8 @@ function ShelfEditor() {
         <PaletteButton label="Shelf Line" type="shelf-line" onAdd={addElement} />
         <PaletteButton label="Divider" type="divider-line" onAdd={addElement} />
         <PaletteButton label="Slot" type="slot" onAdd={addElement} />
+        <button onClick={saveTemplate} className="px-3 py-1 bg-blue-500 text-white rounded text-sm">Save Shelf</button>
+        <button onClick={loadTemplate} className="px-3 py-1 bg-green-500 text-white rounded text-sm">Load Shelf</button>
       </div>
 
       {/* Canvas Elements */}
