@@ -8,6 +8,7 @@ function ShelfEditor() {
   const [zoomLevel, setZoomLevel] = useState(null);
   const zoomInitialized = useRef(false);
   const fitZoomRef = useRef(null);
+  const [selectedTemplate, setSelectedTemplate] = useState('');
 
   const addElement = (type) => {
     const newElement = {
@@ -28,14 +29,16 @@ function ShelfEditor() {
   };
   
   const saveTemplate = () => {
-    const name = prompt("Enter template name:");
+    let name = selectedTemplate || prompt("Enter template name:");
     if (!name) return;
+  
     const templates = JSON.parse(localStorage.getItem('shelfTemplates') || '{}');
     templates[name] = elements;
     localStorage.setItem('shelfTemplates', JSON.stringify(templates));
+    setSelectedTemplate(name);
     alert(`Shelf template "${name}" saved!`);
   };
-
+  
   const loadTemplate = () => {
     const templates = JSON.parse(localStorage.getItem('shelfTemplates') || '{}');
     const name = prompt("Enter template name to load:", Object.keys(templates)[0] || '');
@@ -185,12 +188,32 @@ function ShelfEditor() {
       </div>
 
       {/* Main Action Buttons (below zoom) */}
-      <div className="flex flex-wrap justify-center gap-2">
+      <div className="flex flex-wrap justify-center gap-2 items-center">
         <PaletteButton label="Shelf Line" type="shelf-line" onAdd={addElement} />
         <PaletteButton label="Divider" type="divider-line" onAdd={addElement} />
         <PaletteButton label="Slot" type="slot" onAdd={addElement} />
         <button onClick={saveTemplate} className="px-3 py-1 bg-blue-500 text-white rounded text-sm">Save Shelf</button>
-        <button onClick={loadTemplate} className="px-3 py-1 bg-green-500 text-white rounded text-sm">Load Shelf</button>
+        
+        <select
+          className="px-3 py-1 border rounded text-sm"
+          value={selectedTemplate}
+          onChange={(e) => {
+            const templates = JSON.parse(localStorage.getItem('shelfTemplates') || '{}');
+            const name = e.target.value;
+            setSelectedTemplate(name);
+            if (templates[name]) {
+              setElements(templates[name]);
+            } else {
+              alert('Template not found.');
+            }
+          }}
+        >
+          <option value="">Load Shelf...</option>
+          {Object.keys(JSON.parse(localStorage.getItem('shelfTemplates') || '{}')).map((name) => (
+            <option key={name} value={name}>{name}</option>
+          ))}
+        </select>
+
         <button
           onClick={() => setResizeLocked(prev => !prev)}
           className={`px-3 py-1 rounded text-sm ${
@@ -198,6 +221,16 @@ function ShelfEditor() {
           }`}
         >
           {resizeLocked ? 'Unlock Resize' : 'Lock Resize'}
+        </button>
+
+        <button
+          onClick={() => {
+            setElements([]);
+            setSelectedTemplate('');
+          }}
+          className="px-3 py-1 bg-red-400 text-white rounded text-sm"
+        >
+          Clear
         </button>
       </div>
     </div>
