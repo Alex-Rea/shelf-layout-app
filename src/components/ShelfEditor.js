@@ -36,7 +36,16 @@ function ShelfEditor() {
   return (
     <div className="relative w-full h-[80vh] bg-white border border-dashed overflow-hidden">
 
-      {/* 📦 Zoomable Canvas */}
+      {/* 🧰 Bottom Toolbar */}
+      <div className="fixed bottom-0 left-0 w-full z-10 bg-white border-t p-2 flex justify-center gap-2 shadow-md">
+        <PaletteButton label="Shelf Line" type="shelf-line" onAdd={addElement} />
+        <PaletteButton label="Divider" type="divider-line" onAdd={addElement} />
+        <PaletteButton label="Slot" type="slot" onAdd={addElement} />
+        <button onClick={saveTemplate} className="px-3 py-1 bg-blue-500 text-white rounded text-sm">Save Shelf</button>
+        <button onClick={loadTemplate} className="px-3 py-1 bg-green-500 text-white rounded text-sm">Load Shelf</button>
+      </div>
+
+      {/* 🧱 Zoomable Canvas with Draggables */}
       <TransformWrapper
         minScale={0.5}
         maxScale={3}
@@ -71,15 +80,6 @@ function ShelfEditor() {
           </div>
         </TransformComponent>
       </TransformWrapper>
-
-      {/* 🧰 Bottom Toolbar */}
-      <div className="fixed bottom-0 left-0 w-full z-10 bg-white border-t p-2 flex justify-center gap-2 shadow-md">
-        <PaletteButton label="Shelf Line" type="shelf-line" onAdd={addElement} />
-        <PaletteButton label="Divider" type="divider-line" onAdd={addElement} />
-        <PaletteButton label="Slot" type="slot" onAdd={addElement} />
-        <button onClick={saveTemplate} className="px-3 py-1 bg-blue-500 text-white rounded text-sm">Save Shelf</button>
-        <button onClick={loadTemplate} className="px-3 py-1 bg-green-500 text-white rounded text-sm">Load Shelf</button>
-      </div>
     </div>
   );
 }
