@@ -13,7 +13,7 @@ function App() {
 
   // Example product list (replace with JSON later)
   const products = [
-    { id: 'lays-classic', name: 'Lays Classic', image: '/images/products/lays-classic.webp' },
+    { id: 'lays-classic', name: 'Lays Classic', image: '/images/products/00028400090858_C1C1_s01.jpg' },
     { id: 'doritos-cool-ranch', name: 'Doritos', image: '/images/products/doritos-cool-ranch.webp' },
     { id: 'mms', name: 'M&Ms', image: '/images/products/mms.webp' }
   ];
@@ -36,19 +36,6 @@ function App() {
           >
             Planogram Mode
           </button>
-        </div>
-
-        <h3 className="text-lg font-semibold mb-2">Products</h3>
-        <div className="flex md:flex-col flex-row gap-2 flex-wrap">
-          {products.map((product, index) => (
-            <div key={product.id} className="w-16 h-20">
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-full object-cover rounded border"
-              />
-            </div>
-          ))}
         </div>
       </div>
 
