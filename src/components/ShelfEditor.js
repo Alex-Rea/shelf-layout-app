@@ -12,22 +12,25 @@ function ShelfEditor() {
   const canvasRef = useRef(null);
 
   const addElement = (type) => {
+    const timestamp = Date.now();
     const newElement = {
-      id: `element_${Date.now()}`,
+      id: `element_${timestamp}`,
       type,
       x: 50,
       y: 50,
       width:
         type === 'shelf-line' ? 600 :
         type === 'divider-line' ? 4 :
-        120, // Slot
+        120,
       height:
         type === 'shelf-line' ? 4 :
         type === 'divider-line' ? 300 :
-        160, // Slot
+        160,
+      ...(type === 'slot' && { slotId: `slot_${timestamp}`, product: null }) // 💡
     };
     setElements((prev) => [...prev, newElement]);
   };
+  
   
   const getDragBounds = (el) => {
     const canvas = canvasRef.current;
