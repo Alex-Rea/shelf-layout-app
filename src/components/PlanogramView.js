@@ -75,21 +75,32 @@ function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products 
 
         {/* Main Canvas */}
         <div className="flex-1 p-4 bg-white overflow-hidden">
-          <TransformWrapper
-            minScale={0.4}
-            maxScale={3}
-            doubleClick={{ disabled: true }}
-            wheel={{ step: 0.05 }}
-          >
+        <TransformWrapper
+          minScale={0.2}
+          maxScale={3}
+          initialScale={0.6}
+          doubleClick={{ disabled: true }}
+          wheel={{ step: 0.05 }}
+          panning={{ velocityDisabled: true }} // prevents jerkiness
+        >
             <TransformComponent>
               <div
-                className="border-2 border-dashed border-gray-300 rounded-md bg-gray-50 p-4 inline-block"
-                style={{ minWidth: 800 }}
+                className="relative"
+                style={{
+                  width: '1000px',      // ← gives room to scroll/zoom
+                  height: '1000px',
+                  backgroundColor: '#f9fafb',
+                  border: '2px dashed #d1d5db',
+                  borderRadius: '0.5rem',
+                  left: '50%',
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  position: 'relative',
+                }}
               >
-                {/** Render full shelves with background elements + interactive slots */}
                 {shelves.map((shelf) => (
-                  <div key={shelf.id} className="relative mb-10" style={{ minHeight: 200 }}>
-
+                  <div key={shelf.id} className="absolute" style={{ top: 0, left: 0 }}>
+                    {/* shelf.lines and slots here */}
                     {/* Render shelf-lines and divider-lines */}
                     {shelf.elements?.map((el) => {
                       if (el.type === 'shelf-line' || el.type === 'divider-line') {
