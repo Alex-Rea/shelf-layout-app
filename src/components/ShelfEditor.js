@@ -9,6 +9,7 @@ function ShelfEditor() {
   const zoomInitialized = useRef(false);
   const fitZoomRef = useRef(null);
   const [selectedTemplate, setSelectedTemplate] = useState('');
+  const canvasRef = useRef(null);
 
   const addElement = (type) => {
     const newElement = {
@@ -28,6 +29,20 @@ function ShelfEditor() {
     setElements((prev) => [...prev, newElement]);
   };
   
+  const getDragBounds = (el) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return false;
+  
+    return {
+      left: 0,
+      top: 0,
+      right: canvas.offsetWidth - el.width,
+      bottom: canvas.offsetHeight - el.height
+    };
+  };
+  
+          
+
   const saveTemplate = () => {
     let name = selectedTemplate || prompt("Enter template name:");
     if (!name) return;
@@ -49,48 +64,53 @@ function ShelfEditor() {
 
   useLayoutEffect(() => {
     const scrollEl = scrollContainerRef.current;
-    const canvasWidth = 700;
+    const canvasEl = canvasRef.current;
   
-    if (scrollEl && !zoomInitialized.current) {
+    if (scrollEl && canvasEl && !zoomInitialized.current) {
       const containerWidth = scrollEl.clientWidth;
-      const fitZoom = Math.min(1, containerWidth / canvasWidth);
+      const fitZoom = Math.max(0.50, Math.min(1, containerWidth / canvasEl.offsetWidth));
       fitZoomRef.current = fitZoom;
       setZoomLevel(fitZoom);
-            zoomInitialized.current = true;
-  
-      // scroll to center
-      const scaledWidth = canvasWidth * fitZoom;
-      scrollEl.scrollLeft = (scaledWidth - scrollEl.clientWidth) / 2;
+      zoomInitialized.current = true;
     }
   
-    if (scrollEl && zoomLevel !== null) {
-      const scaledWidth = canvasWidth * zoomLevel;
-      scrollEl.scrollLeft = (scaledWidth - scrollEl.clientWidth) / 2;
+    if (scrollEl && canvasEl && zoomLevel !== null) {
+      // Wait for transform to apply
+      requestAnimationFrame(() => {
+        const scaledWidth = canvasEl.offsetWidth * zoomLevel;
+        const scrollX = (scaledWidth - scrollEl.clientWidth) / 2;
+        scrollEl.scrollLeft = scrollX > 0 ? scrollX : 0;
+      });
     }
   }, [zoomLevel]);
-  
+        
     return (
     <div className="w-full h-[80vh] relative bg-gray-100 overflow-hidden">
 
       {/* 🧱 Zoomed + Centered Canvas */}
       <div ref={scrollContainerRef} className="absolute inset-0 overflow-auto pt-4">
-      <div style={{ width: `${700 * (zoomLevel || 1)}px`, margin: '0 auto' }}>
-      <div
-        style={{
-          transform: `scale(${zoomLevel || 1})`,
-          transformOrigin: 'top center',
-          width: '700px',
-          height: '525px',
-          position: 'relative',
-          transition: 'transform 0.2s ease-in-out'
-        }}
-      >
+          <div
+      ref={canvasRef}
+      style={{
+        transform: `scale(${zoomLevel || 1})`,
+        transformOrigin: 'top center',
+        width: '1000px',
+        height: '1000px',
+        position: 'relative',
+        transition: 'transform 0.2s ease-in-out',
+        border: '2px dashed #ccc', // 👈 soft edge border
+        borderRadius: '8px',        // optional: soft corners
+        boxSizing: 'border-box',    // ensures border doesn't alter size
+        backgroundColor: '#fdfdfd'  // optional: slight contrast to outer area
+      }}
+    >
 
           {elements.map((el) => (
             <Draggable
               key={el.id}
               scale={zoomLevel || 1}
               defaultPosition={{ x: el.x, y: el.y }}
+              bounds={getDragBounds(el)}
               onStop={(e, data) => {
                 setElements((prev) =>
                   prev.map((item) =>
@@ -151,16 +171,15 @@ function ShelfEditor() {
             </Draggable>
           ))}
           </div>
-        </div>
       </div>
 
       <div className="fixed bottom-0 left-0 w-full z-10 bg-white border-t p-2 flex flex-col items-center gap-2 shadow-md">
   
       {/* Zoom Controls (on top) */}
       <div className="flex gap-2">
-        <button
+      <button
           onClick={() =>
-            setZoomLevel(prev => Math.max(fitZoomRef.current || 0.5, (prev || 1) - 0.05))
+            setZoomLevel(prev => Math.max(0.2, (prev || 1) - 0.05)) // 👈 allows zooming out down to 0.2
           }
           className="px-3 py-1 bg-gray-300 rounded text-sm"
         >
