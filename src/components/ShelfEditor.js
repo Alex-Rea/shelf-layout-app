@@ -13,7 +13,6 @@ function ShelfEditor() {
   const scrollContainerRef = useRef(null);
   const canvasRef = useRef(null);
 
-
   const addElement = (type) => {
     const timestamp = Date.now();
     const newElement = {
@@ -53,12 +52,9 @@ function ShelfEditor() {
     setElements(prev => prev.map(el => el.id === id ? { ...el, width, height } : el));
   };
 
-  
-
   useLayoutEffect(() => {
     const scrollEl = scrollContainerRef.current;
     const canvasEl = canvasRef.current;
-
     if (scrollEl && canvasEl && !zoomInitialized.current) {
       const containerWidth = scrollEl.clientWidth;
       const fitZoom = Math.max(0.4, Math.min(1, containerWidth / canvasEl.offsetWidth));
@@ -95,9 +91,8 @@ function ShelfEditor() {
                   defaultPosition={{ x: el.x, y: el.y }}
                   bounds={getDragBounds(el)}
                   onStart={(e) => {
-                    // Prevent dragging when the resize handle is the event target
                     if (e.target.classList.contains('resize-handle')) {
-                      return false; // cancel drag
+                      return false; // Prevent drag while resizing
                     }
                   }}
                   onStop={(e, data) => {
@@ -107,13 +102,11 @@ function ShelfEditor() {
                   }}
                 >
                   <div className="absolute touch-none" style={{ padding: 6 }}>
-                  <Resizable
+                    <Resizable
                       size={{ width: el.width, height: el.height }}
-                      onResizeStart={() => setIsResizing(true)}
                       onResizeStop={(e, direction, ref) => {
                         updateSize(el.id, ref.offsetWidth, ref.offsetHeight);
-                        setIsResizing(false);
-                      }}                      
+                      }}
                       enable={resizeLocked ? {} : { bottomRight: true }}
                       handleComponent={{
                         bottomRight: !resizeLocked && (
