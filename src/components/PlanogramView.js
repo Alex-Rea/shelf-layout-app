@@ -13,8 +13,6 @@ function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products 
   const scrollContainerRef = useRef(null);
   const canvasRef = useRef(null);
 
-  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
