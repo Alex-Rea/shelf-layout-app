@@ -12,7 +12,6 @@ function ShelfEditor() {
 
   const scrollContainerRef = useRef(null);
   const canvasRef = useRef(null);
-  const [isResizing, setIsResizing] = useState(false);
 
 
   const addElement = (type) => {
