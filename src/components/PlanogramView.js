@@ -57,6 +57,37 @@ function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products 
     setSlotDragMode(false); // Optional: Reset drag mode too
   };
   
+  const handleCenterOnDesign = () => {
+    const scrollEl = scrollContainerRef.current;
+    const canvasEl = canvasRef.current;
+  
+    if (!scrollEl || !canvasEl) return;
+  
+    const canvasWidth = canvasEl.offsetWidth;
+    const canvasHeight = canvasEl.offsetHeight;
+  
+    const containerWidth = scrollEl.clientWidth;
+    const containerHeight = scrollEl.clientHeight;
+  
+    // ✅ Zoom out view to expose canvas
+    const zoomOut = 0.4; // You can adjust this factor
+    setZoomLevel(zoomOut);
+  
+    // ✅ Delay until zoom has applied
+    setTimeout(() => {
+      // Calculate scroll positions based on unscaled canvas
+      const scrollLeft = ((canvasWidth * zoomOut - containerWidth) / 2) + 1000;
+      const scrollTop = ((canvasHeight * zoomOut - containerHeight) / 2) + 1000;
+        
+      scrollEl.scrollTo({
+        left: scrollLeft,
+        top: scrollTop,
+        behavior: 'smooth',
+      });
+    }, 100);
+  };
+      
+      
 
   const handleAddShelfFromTemplate = () => {
     const templates = JSON.parse(localStorage.getItem('shelfTemplates') || '{}');
@@ -101,22 +132,32 @@ function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products 
       <div className="w-full h-full flex flex-col bg-white overflow-hidden">
         <div className="flex-1 overflow-auto">
           <div className="min-w-max min-h-max flex items-center justify-center">
-            <div ref={scrollContainerRef} className="relative inline-block">
-              <div
-                ref={canvasRef}
-                style={{
-                  transform: `scale(${zoomLevel || 1})`,
-                  transformOrigin: 'center center',
-                  width: '1000px',
-                  height: '1000px',
-                  transition: 'transform 0.2s ease-in-out',
-                  border: '2px dashed #ccc',
-                  borderRadius: '8px',
-                  backgroundColor: '#fdfdfd',
-                  position: 'relative',
-                  flexShrink: 0
-                }}
-              >
+          <div
+  ref={scrollContainerRef}
+  className="relative w-full h-full overflow-auto"
+  style={{ touchAction: 'manipulation' }}
+>
+  <div
+    style={{
+      width: `${1250 * (zoomLevel || 1)}px`,
+      height: `${1250 * (zoomLevel || 1)}px`,
+      transition: 'width 0.2s ease, height 0.2s ease',
+    }}
+  >
+    <div
+      ref={canvasRef}
+      style={{
+        width: '1250px',
+        height: '1250px',
+        border: '2px dashed #ccc',
+        borderRadius: '8px',
+        backgroundColor: '#fdfdfd',
+        position: 'relative',
+        transform: `scale(${zoomLevel || 1})`,
+        transformOrigin: 'top left',
+      }}
+    >
+
 {shelves.map((shelf) => (
   <div key={shelf.id} className="absolute" style={{ top: 0, left: 0 }}>
     {shelf.elements.map(el => {
@@ -146,6 +187,11 @@ function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products 
             key={el.id}
             position={{ x: el.x, y: el.y }}
             onDrag={(e, data) => {
+              const speed = 1.25; // speed multiplier
+            
+              const adjustedX = el.x + (data.deltaX * speed);
+              const adjustedY = el.y + (data.deltaY * speed);
+            
               setShelves(prev =>
                 prev.map(s =>
                   s.id !== shelf.id
@@ -154,25 +200,22 @@ function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products 
                         ...s,
                         elements: s.elements.map(item =>
                           item.id === el.id
-                            ? {
-                                ...item,
-                                x: data.x,
-                                y: data.y
-                              }
+                            ? { ...item, x: adjustedX, y: adjustedY }
                             : item
                         )
                       }
                 )
               );
             }}
-          >
+                      >
             <div
-              style={{
-                position: 'absolute',
-                width: el.width,
-                height: el.height,
-                zIndex: 10
-              }}
+            style={{
+              position: 'absolute',
+              width: el.width,
+              height: el.height,
+              zIndex: 10,
+              transition: 'transform 0.1s ease-out'  // 👈 This line!
+            }}
               className="border border-dashed bg-white flex items-center justify-center cursor-move"
               onClick={() => setActiveSlotId(el.id)}
             >
@@ -194,6 +237,7 @@ function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products 
                     )}
                     {provided.placeholder}
                   </div>
+                  
                 )}
               </Droppable>
             </div>
@@ -242,6 +286,8 @@ function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products 
               </div>
             </div>
           </div>
+          </div>
+
         </div>
 
         {/* Bottom Toolbar */}
@@ -321,10 +367,10 @@ function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products 
               +
             </button>
             <button
-              onClick={() => setZoomLevel(fitZoomRef.current)}
-              className="px-3 py-1 bg-gray-300 rounded text-sm"
+              onClick={handleCenterOnDesign}
+              className="px-3 py-1 bg-purple-400 text-white rounded text-sm"
             >
-              Reset
+              Center on Design
             </button>
           </div>
 
@@ -335,8 +381,6 @@ function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products 
 >
   Clear Canvas
 </button>
-
-
           <button
               onClick={() => shelves.length > 0 && setSlotDragMode(prev => !prev)}
               disabled={shelves.length === 0}
