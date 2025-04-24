@@ -1,5 +1,7 @@
 import React, { useState, useRef, useLayoutEffect } from 'react';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable as DNDDraggable } from 'react-beautiful-dnd';
+import RDraggable from 'react-draggable';
+
 
 function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products }) {
   const [activeSlotId, setActiveSlotId] = useState(null);
@@ -7,6 +9,7 @@ function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products 
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(null);
+  const [slotDragMode, setSlotDragMode] = useState(false);
   const zoomInitialized = useRef(false);
   const fitZoomRef = useRef(null);
 
@@ -21,6 +24,7 @@ function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products 
     const { destination, draggableId } = result;
     if (!destination) return;
 
+    // update product assignment
     setPlanogram(prev => ({
       ...prev,
       [destination.droppableId]: draggableId
@@ -48,7 +52,6 @@ function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products 
     const templates = JSON.parse(localStorage.getItem('shelfTemplates') || '{}');
     const name = prompt("Enter shelf template name to load:", Object.keys(templates)[0] || '');
     const elements = templates[name];
-
     if (!elements) return alert("Template not found.");
 
     const newShelfId = `shelf_${shelves.length + 1}`;
@@ -74,7 +77,6 @@ function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products 
   useLayoutEffect(() => {
     const scrollEl = scrollContainerRef.current;
     const canvasEl = canvasRef.current;
-  
     if (scrollEl && canvasEl && !zoomInitialized.current) {
       const containerWidth = scrollEl.clientWidth;
       const fitZoom = Math.max(0.4, Math.min(1, containerWidth / canvasEl.offsetWidth));
@@ -83,95 +85,154 @@ function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products 
       zoomInitialized.current = true;
     }
   }, [zoomLevel]);
-    
+
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="w-full h-full flex flex-col bg-white overflow-hidden">
-
-        {/* Scrollable Zoom Container */}
         <div className="flex-1 overflow-auto">
-  <div className="min-w-max min-h-max flex items-center justify-center">
-    <div ref={scrollContainerRef} className="relative inline-block">
+          <div className="min-w-max min-h-max flex items-center justify-center">
+            <div ref={scrollContainerRef} className="relative inline-block">
+              <div
+                ref={canvasRef}
+                style={{
+                  transform: `scale(${zoomLevel || 1})`,
+                  transformOrigin: 'center center',
+                  width: '1000px',
+                  height: '1000px',
+                  transition: 'transform 0.2s ease-in-out',
+                  border: '2px dashed #ccc',
+                  borderRadius: '8px',
+                  backgroundColor: '#fdfdfd',
+                  position: 'relative',
+                  flexShrink: 0
+                }}
+              >
+{shelves.map((shelf) => (
+  <div key={shelf.id} className="absolute" style={{ top: 0, left: 0 }}>
+    {shelf.elements.map(el => {
+      if (el.type === 'shelf-line' || el.type === 'divider-line') {
+        return (
           <div
-            ref={canvasRef}
+            key={el.id}
+            className="absolute bg-black"
             style={{
-              transform: `scale(${zoomLevel || 1})`,
-              transformOrigin: 'center center',
-              width: '1000px',
-              height: '1000px',
-              minWidth: '1000px',
-              minHeight: '1000px',
-              transition: 'transform 0.2s ease-in-out',
-              border: '2px dashed #ccc',
-              borderRadius: '8px',
-              backgroundColor: '#fdfdfd',
-              position: 'relative',
-              flexShrink: 0
+              width: `${el.width}px`,
+              height: `${el.height}px`,
+              left: `${el.x}px`,
+              top: `${el.y}px`,
+            }}
+          />
+        );
+      }
+
+      if (el.type === 'slot') {
+        const productId = planogram[el.id];
+        const product = products.find(p => p.id === productId);
+
+        
+        
+        return slotDragMode ? (
+          <RDraggable
+            key={el.id}
+            position={{ x: el.x, y: el.y }}
+            onDrag={(e, data) => {
+              setShelves(prev =>
+                prev.map(s =>
+                  s.id !== shelf.id
+                    ? s
+                    : {
+                        ...s,
+                        elements: s.elements.map(item =>
+                          item.id === el.id
+                            ? {
+                                ...item,
+                                x: data.x,
+                                y: data.y
+                              }
+                            : item
+                        )
+                      }
+                )
+              );
             }}
           >
-            {shelves.map((shelf) => (
-              <div key={shelf.id} className="absolute" style={{ top: 0, left: 0 }}>
-                {shelf.elements?.map((el) => {
-                  if (el.type === 'shelf-line' || el.type === 'divider-line') {
-                    return (
-                      <div
-                        key={el.id}
-                        className="absolute bg-black"
-                        style={{
-                          width: `${el.width}px`,
-                          height: `${el.height}px`,
-                          left: `${el.x}px`,
-                          top: `${el.y}px`,
-                        }}
+            <div
+              style={{
+                position: 'absolute',
+                width: el.width,
+                height: el.height,
+                zIndex: 10
+              }}
+              className="border border-dashed bg-white flex items-center justify-center cursor-move"
+              onClick={() => setActiveSlotId(el.id)}
+            >
+              <Droppable droppableId={el.id}>
+                {(provided) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className="w-full h-full flex items-center justify-center"
+                  >
+                    {product ? (
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-full h-full object-contain"
                       />
-                    );
-                  }
-                  return null;
-                })}
-
-                {shelf.elements
-                  .filter(el => el.type === 'slot')
-                  .map((slot) => {
-                    const productId = planogram[slot.id];
-                    const product = products.find(p => p.id === productId);
-
-                    return (
-                      <Droppable droppableId={slot.id} key={slot.id}>
-                        {(provided) => (
+                    ) : (
+                      <span className="text-xs text-gray-400">Empty</span>
+                    )}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </div>
+          </RDraggable>
+                        ) : (
                           <div
-                            ref={provided.innerRef}
-                            {...provided.droppableProps}
-                            className="absolute border border-dashed bg-white flex items-center justify-center cursor-pointer"
-                            onClick={() => setActiveSlotId(slot.id)}
+                            key={el.id}
                             style={{
-                              left: `${slot.x}px`,
-                              top: `${slot.y}px`,
-                              width: `${slot.width}px`,
-                              height: `${slot.height}px`,
+                              position: 'absolute',
+                              left: el.x,
+                              top: el.y,
+                              width: el.width,
+                              height: el.height,
                               zIndex: 10
                             }}
+                            className="border border-dashed bg-white flex items-center justify-center cursor-pointer"
+                            onClick={() => setActiveSlotId(el.id)}
                           >
-                            {product ? (
-                              <img
-                                src={product.image}
-                                alt={product.name}
-                                className="w-full h-full object-contain"
-                              />
-                            ) : (
-                              <span className="text-xs text-gray-400">Empty</span>
-                            )}
-                            {provided.placeholder}
+                            <Droppable droppableId={el.id}>
+                              {(provided) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.droppableProps}
+                                  className="w-full h-full flex items-center justify-center"
+                                >
+                                  {product ? (
+                                    <img
+                                      src={product.image}
+                                      alt={product.name}
+                                      className="w-full h-full object-contain"
+                                    />
+                                  ) : (
+                                    <span className="text-xs text-gray-400">Empty</span>
+                                  )}
+                                  {provided.placeholder}
+                                </div>
+                              )}
+                            </Droppable>
                           </div>
-                        )}
-                      </Droppable>
-                    );
-                  })}
+                        );
+                        }
+                      return null;
+                    })}
+                  </div>
+                ))}           
               </div>
-            ))}
-         </div>
+            </div>
+          </div>
         </div>
-       </div>
-      </div>
 
         {/* Bottom Toolbar */}
         <div className="fixed bottom-0 left-0 w-full bg-white border-t shadow-md z-10 px-4 pt-2">
@@ -211,7 +272,7 @@ function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products 
                     className="flex flex-wrap gap-2 overflow-x-auto pb-3"
                   >
                     {filteredProducts.map((product, index) => (
-                      <Draggable key={product.id} draggableId={product.id} index={index}>
+                      <DNDDraggable key={product.id} draggableId={product.id} index={index}>
                         {(provided) => (
                           <div
                             ref={provided.innerRef}
@@ -226,7 +287,7 @@ function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products 
                             />
                           </div>
                         )}
-                      </Draggable>
+                      </DNDDraggable>
                     ))}
                     {provided.placeholder}
                   </div>
@@ -235,33 +296,44 @@ function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products 
             </>
           )}
 
-        {/* Zoom Controls */}
-        <div className="flex justify-center gap-2 mb-2">
-          <button
-            onClick={() => setZoomLevel(prev => Math.max(0.2, (prev || 1) - 0.15))}
-            className="px-3 py-1 bg-gray-300 rounded text-sm"
-          >
-            -
-          </button>
-          <button
-            onClick={() => setZoomLevel(prev => Math.min(2, (prev || 1) + 0.15))}
-            className="px-3 py-1 bg-gray-300 rounded text-sm"
-          >
-            +
-          </button>
-          <button
-            onClick={() => setZoomLevel(fitZoomRef.current)}
-            className="px-3 py-1 bg-gray-300 rounded text-sm"
-          >
-            Reset
-          </button>
-        </div>
+          {/* Zoom Controls */}
+          <div className="flex justify-center gap-2 mb-2">
+            <button
+              onClick={() => setZoomLevel(prev => Math.max(0.2, (prev || 1) - 0.15))}
+              className="px-3 py-1 bg-gray-300 rounded text-sm"
+            >
+              -
+            </button>
+            <button
+              onClick={() => setZoomLevel(prev => Math.min(2, (prev || 1) + 0.15))}
+              className="px-3 py-1 bg-gray-300 rounded text-sm"
+            >
+              +
+            </button>
+            <button
+              onClick={() => setZoomLevel(fitZoomRef.current)}
+              className="px-3 py-1 bg-gray-300 rounded text-sm"
+            >
+              Reset
+            </button>
+          </div>
+
           <div className="flex flex-wrap justify-center gap-2 border-t pt-3 mt-2">
+          <button
+              onClick={() => shelves.length > 0 && setSlotDragMode(prev => !prev)}
+              disabled={shelves.length === 0}
+              className={`px-3 py-2 rounded text-sm transition-all ${
+                shelves.length === 0
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : slotDragMode
+                  ? 'bg-yellow-400 text-black'
+                  : 'bg-gray-200 text-black'
+              }`}
+            >
+              {slotDragMode ? 'Disable Slot Drag' : 'Enable Slot Drag'}
+            </button>
             <button onClick={handleAddShelfFromTemplate} className="px-3 py-2 bg-gray-700 text-white rounded text-sm">
               Add Shelf
-            </button>
-            <button onClick={() => setZoomLevel(fitZoomRef.current)} className="px-3 py-2 bg-purple-500 text-white rounded text-sm">
-              Reset Zoom
             </button>
             <button onClick={savePlanogram} className="px-3 py-2 bg-blue-500 text-white rounded text-sm">
               Save Planogram
