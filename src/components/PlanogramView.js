@@ -48,6 +48,16 @@ function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products 
     setPlanogram(templates[name]);
   };
 
+  const clearCanvas = () => {
+    const confirmClear = window.confirm("Are you sure you want to clear the entire canvas?");
+    if (!confirmClear) return;
+  
+    setShelves([]);
+    setPlanogram({});
+    setSlotDragMode(false); // Optional: Reset drag mode too
+  };
+  
+
   const handleAddShelfFromTemplate = () => {
     const templates = JSON.parse(localStorage.getItem('shelfTemplates') || '{}');
     const name = prompt("Enter shelf template name to load:", Object.keys(templates)[0] || '');
@@ -319,6 +329,14 @@ function PlanogramView({ shelves, setShelves, planogram, setPlanogram, products 
           </div>
 
           <div className="flex flex-wrap justify-center gap-2 border-t pt-3 mt-2">
+          <button
+  onClick={clearCanvas}
+  className="px-3 py-2 bg-red-500 text-white rounded text-sm"
+>
+  Clear Canvas
+</button>
+
+
           <button
               onClick={() => shelves.length > 0 && setSlotDragMode(prev => !prev)}
               disabled={shelves.length === 0}
